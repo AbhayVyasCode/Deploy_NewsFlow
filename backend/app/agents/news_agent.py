@@ -40,7 +40,7 @@ def get_llm():
     if not settings.GOOGLE_API_KEY:
         return None
     return ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash-lite",
+        model="gemini-2.0-flash",
         google_api_key=settings.GOOGLE_API_KEY,
         temperature=0.3
     )
@@ -144,37 +144,28 @@ def create_news_agent():
             
             if not use_newsapi:
                 # Fallback to DuckDuckGo when NEWS_API_KEY is missing or errored so the app still works
-                search_tool = DuckDuckGoSearchResults(max_results=20)
-                results = search_tool.invoke(query)
+                # Use standard DuckDuckGo search to retrieve list of results
+                from duckduckgo_search import DDGS
 
-                items = []
-                if isinstance(results, list):
-                    items = results
-                elif isinstance(results, str):
-                    text = results.strip()
-                    try:
-                        if text.startswith("["):
-                            items = json.loads(text)
-                    except Exception:
-                        items = []
-                    # DuckDuckGo sometimes returns a python-literal string; fall back to eval safely
-                    if not items:
-                        try:
-                            parsed = eval(text, {"__builtins__": {}})
-                            if isinstance(parsed, list):
-                                items = parsed
-                        except Exception:
-                            items = []
+                try:
+                    with DDGS() as ddgs:
+                        # Use 'news' backend if possible, or 'text' with news keywords
+                        results = list(ddgs.news(query, max_results=20))
+                except Exception as e:
+                    print(f"DuckDuckGo search error: {e}")
+                    results = []
 
-                for item in items:
+                for item in results:
+                    # DDGS news results format:
+                    # {'date': '2023-10...', 'title': '...', 'body': '...', 'url': '...', 'image': '...', 'source': '...'}
                     raw_results.append({
                         "title": item.get("title", ""),
-                        "snippet": item.get("snippet", ""),
-                        "link": item.get("link", ""),
-                        "source": item.get("source", "") or item.get("link", ""),
+                        "snippet": item.get("body", "") or item.get("snippet", ""),
+                        "link": item.get("url", "") or item.get("link", ""),
+                        "source": item.get("source", "Unknown"),
                         "image_url": item.get("image"),
-                        "published_at": item.get("date") or "",
-                        "author": item.get("publisher") or item.get("source")
+                        "published_at": item.get("date", ""),
+                        "author": item.get("source")
                     })
             
             return {**state, "raw_search_results": raw_results, "use_newsapi": use_newsapi}
