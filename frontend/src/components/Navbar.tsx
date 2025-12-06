@@ -1,7 +1,6 @@
-import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Newspaper, TrendingUp, Settings, Search } from 'lucide-react';
+import { Newspaper, TrendingUp, Settings, Search, Languages, Video } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const Navbar = () => {
@@ -10,6 +9,8 @@ const Navbar = () => {
   const links = [
     { href: '/', label: 'Feed', icon: Newspaper },
     { href: '/trends', label: 'Trends', icon: TrendingUp },
+    { href: '/videos', label: 'Videos', icon: Video },
+    { href: '/hindi', label: 'Hindi', icon: Languages },
     { href: '/search', label: 'Search', icon: Search },
     { href: '/settings', label: 'Settings', icon: Settings },
   ];
@@ -29,7 +30,7 @@ const Navbar = () => {
             <span className="hidden md:inline">NewsFlow</span>
           </Link>
 
-          <div className="flex items-center gap-1 md:gap-4">
+          <div className="flex items-center gap-1 md:gap-2 lg:gap-4 overflow-x-auto no-scrollbar">
             {links.map((link) => {
               const Icon = link.icon;
               const isActive = location.pathname === link.href;
@@ -39,7 +40,7 @@ const Navbar = () => {
                   key={link.href}
                   to={link.href}
                   className={cn(
-                    "relative px-4 py-2 rounded-full flex items-center gap-2 transition-colors",
+                    "relative px-3 md:px-4 py-2 rounded-full flex items-center gap-2 transition-colors shrink-0",
                     isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                   )}
                 >

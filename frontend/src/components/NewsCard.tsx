@@ -1,6 +1,5 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, ExternalLink, Share2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Calendar, ExternalLink, Share2, TrendingUp, TrendingDown, Minus, Play } from 'lucide-react';
 
 interface NewsCardProps {
   title: string;
@@ -15,7 +14,7 @@ interface NewsCardProps {
   sentimentScore?: number;
 }
 
-const SentimentBadge = ({ sentiment, score }: { sentiment?: string; score?: number }) => {
+const SentimentBadge = ({ sentiment }: { sentiment?: string; score?: number }) => {
   if (!sentiment) return null;
   
   const config = {
@@ -35,6 +34,8 @@ const SentimentBadge = ({ sentiment, score }: { sentiment?: string; score?: numb
 };
 
 const NewsCard = ({ title, summary, source, date, imageUrl, url, category, index, sentiment, sentimentScore }: NewsCardProps) => {
+  const isVideo = title.toLowerCase().includes('video') || url.includes('youtube') || category === 'Video';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -47,6 +48,7 @@ const NewsCard = ({ title, summary, source, date, imageUrl, url, category, index
         <img
           src={imageUrl || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=2070&auto=format&fit=crop"}
           alt={title}
+          loading="lazy"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
         <div className="absolute top-4 left-4 flex gap-2">
@@ -59,6 +61,15 @@ const NewsCard = ({ title, summary, source, date, imageUrl, url, category, index
             <SentimentBadge sentiment={sentiment} score={sentimentScore} />
           </div>
         )}
+
+        {isVideo && (
+           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+             <div className="bg-black/40 rounded-full p-3 backdrop-blur-sm border border-white/20">
+               <Play className="w-8 h-8 text-white fill-white" />
+             </div>
+           </div>
+        )}
+
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
@@ -89,7 +100,7 @@ const NewsCard = ({ title, summary, source, date, imageUrl, url, category, index
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
           >
-            Read More
+            {isVideo ? 'Watch Video' : 'Read More'}
             <ExternalLink className="w-4 h-4" />
           </a>
         </div>

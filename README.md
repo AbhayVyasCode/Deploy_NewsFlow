@@ -5,18 +5,24 @@ A personalized news aggregator built with React, FastAPI, LangChain, LangGraph, 
 ## Features
 
 - 🔍 **Smart Search**: Search for news on any topic using AI-powered curation
+- 🇮🇳 **Hindi News**: Dedicated section for Hindi news and India-centric updates
+- 📺 **Video News**: Watch trending news videos from across the web
+- 🗣️ **Text-to-Speech**: Listen to news summaries on the go
+- 🌐 **Translation**: Instant translation of articles to/from Hindi
 - 📊 **30 Categories**: Browse trending news across 30 different categories
 - 🤖 **AI Summarization**: News articles summarized by Gemini AI
 - ⚡ **Real-time**: Live news from across the internet via DuckDuckGo
-- 🎨 **Modern UI**: Beautiful, animated React frontend
+- 🎨 **Modern UI**: Beautiful, animated React frontend with Three.js background
+- 🌓 **Dark Mode**: Fully functional dark/light mode toggle
 
 ## Tech Stack
 
-- **Frontend**: React, Vite, TailwindCSS, Framer Motion
+- **Frontend**: React, Vite, TailwindCSS, Framer Motion, Three.js
 - **Backend**: FastAPI, Python
 - **AI**: LangChain, LangGraph, Google Gemini 2.0 Flash
 - **Search**: DuckDuckGo Search API (Free)
 - **Database**: Supabase (Free Tier)
+- **Audio**: gTTS (Google Text-to-Speech)
 
 ## Project Structure
 
@@ -26,6 +32,7 @@ Project1/
 │   ├── src/
 │   │   ├── components/   # UI Components
 │   │   ├── pages/        # Page Components
+│   │   ├── context/      # Context Providers
 │   │   └── services/     # API Services
 │   └── package.json
 ├── backend/           # FastAPI Application
@@ -33,6 +40,7 @@ Project1/
 │   │   ├── agents/       # LangGraph Workflows
 │   │   ├── api/          # API Routes
 │   │   ├── core/         # Config
+│   │   ├── services/     # External Services (Scraper, TTS)
 │   │   └── models/       # Pydantic Models
 │   ├── main.py
 │   └── requirements.txt
@@ -65,7 +73,7 @@ Project1/
 2. Create `.env` file:
 
    ```bash
-   copy .env.example .env
+   cp .env.example .env  # Or copy .env.example .env on Windows
    ```
 
 3. Edit `.env` and add your API keys:
@@ -119,7 +127,9 @@ npm run dev
 | POST   | `/api/v1/news/search`            | Search for news       |
 | GET    | `/api/v1/news/trends/{category}` | Get trending news     |
 | GET    | `/api/v1/news/feed`              | Get personalized feed |
-| GET    | `/api/v1/news/categories`        | List all categories   |
+| POST   | `/api/v1/news/summarize`         | Summarize URL         |
+| POST   | `/api/v1/news/translate`         | Translate Text        |
+| POST   | `/api/v1/news/speak`             | Text-to-Speech        |
 
 ## Free Tier Limits
 

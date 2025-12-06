@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Save, Moon, Sun, Check } from "lucide-react";
+import { useTheme } from "../context/ThemeContext";
 
 const CATEGORIES = [
   "Technology",
@@ -25,14 +26,10 @@ const Settings = () => {
     "Technology",
     "Science",
   ]);
-  const [darkMode, setDarkMode] = useState(false);
   const [saved, setSaved] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
-    // Check if dark mode is enabled
-    const isDark = document.documentElement.classList.contains("dark");
-    setDarkMode(isDark);
-
     // Load saved preferences
     const saved = localStorage.getItem("newsflow_preferences");
     if (saved) {
@@ -50,17 +47,6 @@ const Settings = () => {
     setSaved(false);
   };
 
-  const toggleDarkMode = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    if (newMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    localStorage.setItem("newsflow_darkmode", JSON.stringify(newMode));
-  };
-
   const savePreferences = () => {
     // Save to local storage only (no backend call for now)
     localStorage.setItem(
@@ -76,7 +62,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="max-w-2xl mx-auto space-y-8 px-4 md:px-0">
       <header className="space-y-2">
         <motion.h1
           initial={{ opacity: 0, x: -20 }}
@@ -97,27 +83,28 @@ const Settings = () => {
         className="space-y-6"
       >
         {/* Dark Mode Toggle */}
-        <div className="bg-card border border-border rounded-xl p-6">
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold">Appearance</h2>
               <p className="text-sm text-muted-foreground">Toggle dark mode</p>
             </div>
             <button
-              onClick={toggleDarkMode}
-              className="p-3 rounded-full bg-secondary hover:bg-secondary/80 transition-all"
+              onClick={toggleTheme}
+              className="p-3 rounded-full bg-secondary hover:bg-secondary/80 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+              aria-label="Toggle dark mode"
             >
-              {darkMode ? (
-                <Sun className="w-6 h-6" />
+              {theme === 'dark' ? (
+                <Moon className="w-6 h-6 text-yellow-400" />
               ) : (
-                <Moon className="w-6 h-6" />
+                <Sun className="w-6 h-6 text-orange-500" />
               )}
             </button>
           </div>
         </div>
 
         {/* Category Selection */}
-        <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+        <div className="bg-card border border-border rounded-xl p-6 space-y-4 shadow-sm">
           <h2 className="text-xl font-semibold">Interests</h2>
           <p className="text-sm text-muted-foreground">
             Select the topics you want to see in your daily briefing (
@@ -143,7 +130,7 @@ const Settings = () => {
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end pb-8">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
