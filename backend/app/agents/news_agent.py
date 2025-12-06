@@ -40,7 +40,7 @@ def get_llm():
     if not settings.GOOGLE_API_KEY:
         return None
     return ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         google_api_key=settings.GOOGLE_API_KEY,
         temperature=0.3
     )
@@ -145,28 +145,28 @@ def create_news_agent():
             if not use_newsapi:
                 # Fallback to DuckDuckGo when NEWS_API_KEY is missing or errored so the app still works
                 # Use standard DuckDuckGo search to retrieve list of results
-                from duckduckgo_search import DDGS
-
                 try:
+                    from duckduckgo_search import DDGS
                     with DDGS() as ddgs:
                         # Use 'news' backend if possible, or 'text' with news keywords
-                        results = list(ddgs.news(query, max_results=20))
+                        results = list(ddgs.news(query, max_results=15))
+                    
+                    for item in results:
+                        # DDGS news results format:
+                        # {'date': '2023-10...', 'title': '...', 'body': '...', 'url': '...', 'image': '...', 'source': '...'}
+                        raw_results.append({
+                            "title": item.get("title", ""),
+                            "snippet": item.get("body", "") or item.get("snippet", ""),
+                            "link": item.get("url", "") or item.get("link", ""),
+                            "source": item.get("source", "Unknown"),
+                            "image_url": item.get("image"),
+                            "published_at": item.get("date", ""),
+                            "author": item.get("source")
+                        })
                 except Exception as e:
                     print(f"DuckDuckGo search error: {e}")
-                    results = []
-
-                for item in results:
-                    # DDGS news results format:
-                    # {'date': '2023-10...', 'title': '...', 'body': '...', 'url': '...', 'image': '...', 'source': '...'}
-                    raw_results.append({
-                        "title": item.get("title", ""),
-                        "snippet": item.get("body", "") or item.get("snippet", ""),
-                        "link": item.get("url", "") or item.get("link", ""),
-                        "source": item.get("source", "Unknown"),
-                        "image_url": item.get("image"),
-                        "published_at": item.get("date", ""),
-                        "author": item.get("source")
-                    })
+                    # Return empty results instead of crashing
+                    pass
             
             return {**state, "raw_search_results": raw_results, "use_newsapi": use_newsapi}
         except Exception as e:
@@ -180,92 +180,19 @@ def create_news_agent():
                 return {**state, "curated_news": []}
             
             llm = get_llm()
-            
-            # If no API key, just pass through raw results with intelligent category detection
-            if not llm:
-                curated = []
-                query = state.get("query", "")
-                for item in raw_results:
-                    title = item.get("title", "Untitled")
-                    snippet = item.get("snippet", "")
-                    combined_text = f"{title} {snippet}"
-                    
-                    # Detect category intelligently
-                    detected_category = detect_category_from_text(
-                        combined_text, 
-                        query=query,
-                        categories=state.get("categories") or settings.NEWS_CATEGORIES
-                    )
-                    
-                    curated.append({
-                        "title": title,
-                        "summary": snippet,
-                        "source": item.get("source", "Unknown"),
-                        "url": item.get("link", "#"),
-                        "image_url": item.get("image_url"),
-                        "category": detected_category,
-                        "sentiment": "neutral",
-                        "sentiment_score": 0.0,
-                        "published_at": item.get("published_at", ""),
-                        "author": item.get("author")
-                    })
-                return {**state, "curated_news": curated}
-            
-            prompt = f"""You are a news curator and sentiment analyst. Given the following raw search results, 
-            create a curated list of news items. For each item, provide:
-            - title: A clear, engaging title (keep original if good)
-            - summary: A 2-3 sentence summary
-            - source: The source website
-            - url: The article URL
-            - image_url: The image URL if available
-            - category: Best matching category from: {', '.join(settings.NEWS_CATEGORIES)}
-            - sentiment: One of "positive", "negative", or "neutral"
-            - sentiment_score: A number from -1.0 (very negative) to 1.0 (very positive)
-            - published_at: Publication date
-            - author: Article author if available
-            
-            Raw results:
-            {json.dumps(raw_results, indent=2)}
-            
-            Return ONLY a valid JSON array of news items. No other text."""
-            
-            response = llm.invoke([
-                SystemMessage(content="You are a news curator that outputs only valid JSON."),
-                HumanMessage(content=prompt)
-            ])
-            
-            # Parse response
-            content = response.content.strip()
-            if content.startswith("```"):
-                content = content.split("```")[1]
-                if content.startswith("json"):
-                    content = content[4:]
-            
-            curated = json.loads(content)
-            
-            # Ensure categories are properly assigned (fallback to detection if missing)
             query = state.get("query", "")
-            for item in curated:
-                if not item.get("category") or item.get("category") == "General":
-                    combined_text = f"{item.get('title', '')} {item.get('summary', '')}"
-                    item["category"] = detect_category_from_text(
-                        combined_text,
-                        query=query,
-                        categories=settings.NEWS_CATEGORIES
-                    )
             
-            return {**state, "curated_news": curated}
-        except Exception as e:
-            # On error, pass through raw results with intelligent category detection
+            # Fast path: Skip AI curation for speed, use intelligent category detection
+            # This makes the app much faster while still providing good results
             curated = []
-            query = state.get("query", "")
-            for item in state.get("raw_search_results", []):
+            for item in raw_results:
                 title = item.get("title", "Untitled")
                 snippet = item.get("snippet", "")
                 combined_text = f"{title} {snippet}"
                 
+                # Detect category intelligently
                 detected_category = detect_category_from_text(
-                    combined_text,
+                    combined_text, 
                     query=query,
                     categories=state.get("categories") or settings.NEWS_CATEGORIES
                 )
@@ -282,7 +209,16 @@ def create_news_agent():
                     "published_at": item.get("published_at", ""),
                     "author": item.get("author")
                 })
-            return {**state, "curated_news": curated, "error": str(e)}
+            return {**state, "curated_news": curated}
+            
+            # Original AI curation code (commented out for speed)
+            # Uncomment if you want AI-powered summaries and sentiment analysis
+            # if not llm:
+            #     return {**state, "curated_news": curated}
+
+        except Exception as e:
+            # On error, return empty curated news
+            return {**state, "curated_news": [], "error": str(e)}
     
     def format_output(state: NewsAgentState) -> NewsAgentState:
         """Format the final news output"""

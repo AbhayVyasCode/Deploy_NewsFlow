@@ -11,7 +11,7 @@ def get_llm():
         return None
     return ChatGoogleGenerativeAI(
         # Requested lightweight model; change here if you upgrade quota
-        model="gemini-2.0-flash-lite",
+        model="gemini-2.5-flash",
         google_api_key=settings.GOOGLE_API_KEY,
         temperature=0.7
     )
