@@ -54,3 +54,23 @@ class DigestResponse(BaseModel):
     digest: str
     headlines: List[str]
     generated_at: str
+
+class SummarizeRequest(BaseModel):
+    url: str
+
+class SummarizeResponse(BaseModel):
+    summary: str
+    title: Optional[str] = None
+    original_text: Optional[str] = None
+
+class TranslateRequest(BaseModel):
+    text: str
+    target_language: str # 'hi' or 'en'
+
+class TranslateResponse(BaseModel):
+    translated_text: str
+    source_language: Optional[str] = None
+
+class TTSRequest(BaseModel):
+    text: str
+    language: str # 'hi' or 'en'

@@ -1,14 +1,19 @@
 from fastapi import APIRouter, HTTPException, Depends
 from app.models.schemas import (
     NewsSearchRequest, NewsSearchResponse, NewsItem, TrendsRequest, 
-    UserPreferences, ChatRequest, ChatResponse, DigestRequest, DigestResponse
+    UserPreferences, ChatRequest, ChatResponse, DigestRequest, DigestResponse,
+    SummarizeRequest, SummarizeResponse, TranslateRequest, TranslateResponse, TTSRequest
 )
-from app.agents.news_agent import get_news_agent
+from app.agents.news_agent import get_news_agent, get_llm
 from app.agents.chat_agent import chat_with_news, generate_daily_digest
 from app.core.config import settings
 from app.core.supabase import supabase
 from app.services.news_api import news_api_service
+from app.services.scraper import fetch_article_content
+from app.services.audio import text_to_speech
 from typing import List, Optional
+from langchain_core.messages import HumanMessage, SystemMessage
+from fastapi.responses import StreamingResponse
 import json
 
 router = APIRouter()
@@ -76,6 +81,91 @@ async def get_trends(category: str, limit: int = 25):
         }
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/summarize", response_model=SummarizeResponse)
+async def summarize_article(request: SummarizeRequest):
+    """Summarize a news article from a URL"""
+    try:
+        # Fetch content
+        result = await fetch_article_content(request.url)
+        if not result or not result.get("content"):
+            raise HTTPException(status_code=400, detail="Could not fetch article content")
+
+        content = result["content"]
+        title = result.get("title", "")
+
+        llm = get_llm()
+        if not llm:
+            raise HTTPException(status_code=500, detail="LLM service not available")
+
+        # Summarize using LLM
+        prompt = f"""Summarize the following article text into a concise and engaging summary (max 300 words).
+
+        Article Title: {title}
+        Article Text:
+        {content[:10000]}  # Limit content to avoid token limits
+        """
+
+        response = await llm.ainvoke([
+            SystemMessage(content="You are a helpful news summarizer."),
+            HumanMessage(content=prompt)
+        ])
+
+        summary = response.content
+
+        return SummarizeResponse(
+            summary=summary,
+            title=title,
+            original_text=content[:500] + "..." # truncated
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/translate", response_model=TranslateResponse)
+async def translate_text(request: TranslateRequest):
+    """Translate text to target language"""
+    try:
+        llm = get_llm()
+        if not llm:
+            raise HTTPException(status_code=500, detail="LLM service not available")
+
+        language_map = {
+            "hi": "Hindi",
+            "en": "English"
+        }
+        target_lang = language_map.get(request.target_language, "English")
+
+        prompt = f"""Translate the following text to {target_lang}. Preserve the meaning and tone.
+
+        Text:
+        {request.text}
+        """
+
+        response = await llm.ainvoke([
+            SystemMessage(content=f"You are a professional translator for {target_lang}."),
+            HumanMessage(content=prompt)
+        ])
+
+        return TranslateResponse(
+            translated_text=response.content,
+            source_language="auto"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/speak")
+async def speak_text(request: TTSRequest):
+    """Convert text to speech"""
+    try:
+        audio_stream = await text_to_speech(request.text, request.language)
+        if not audio_stream:
+            raise HTTPException(status_code=500, detail="Could not generate audio")
+
+        return StreamingResponse(audio_stream, media_type="audio/mpeg")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
