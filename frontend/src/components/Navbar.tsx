@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Newspaper, TrendingUp, Settings, Search, Languages, Video } from 'lucide-react';
+import { Newspaper, TrendingUp, Settings, Search, Languages, Video, Sparkles } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const Navbar = () => {
@@ -11,6 +11,7 @@ const Navbar = () => {
     { href: '/trends', label: 'Trends', icon: TrendingUp },
     { href: '/videos', label: 'Videos', icon: Video },
     { href: '/hindi', label: 'Hindi', icon: Languages },
+    { href: '/tools', label: 'AI Tools', icon: Sparkles },
     { href: '/search', label: 'Search', icon: Search },
     { href: '/settings', label: 'Settings', icon: Settings },
   ];

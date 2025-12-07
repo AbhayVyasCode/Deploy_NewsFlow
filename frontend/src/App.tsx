@@ -10,6 +10,7 @@ const SearchPage = lazy(() => import('./pages/Search'));
 const Settings = lazy(() => import('./pages/Settings'));
 const HindiNews = lazy(() => import('./pages/HindiNews'));
 const Videos = lazy(() => import('./pages/Videos'));
+const ArticleTools = lazy(() => import('./pages/ArticleTools'));
 
 const PageLoader = () => (
   <div className="flex h-[50vh] w-full items-center justify-center">
@@ -28,6 +29,7 @@ function App() {
             <Route path="/videos" element={<Videos />} />
             <Route path="/hindi" element={<HindiNews />} />
             <Route path="/search" element={<SearchPage />} />
+            <Route path="/tools" element={<ArticleTools />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </Suspense>

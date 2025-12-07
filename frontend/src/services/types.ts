@@ -49,3 +49,28 @@ export interface DigestResponse {
   headlines: string[];
   generated_at: string;
 }
+
+export interface SummarizeRequest {
+  url: string;
+}
+
+export interface SummarizeResponse {
+  summary: string;
+  title?: string;
+  original_text?: string;
+}
+
+export interface TranslateRequest {
+  text: string;
+  target_language: string; // 'hi' or 'en'
+}
+
+export interface TranslateResponse {
+  translated_text: string;
+  source_language?: string;
+}
+
+export interface TTSRequest {
+  text: string;
+  language: string; // 'hi' or 'en'
+}

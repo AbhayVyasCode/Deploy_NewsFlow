@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, ExternalLink, Share2, TrendingUp, TrendingDown, Minus, Play } from 'lucide-react';
+import { Calendar, ExternalLink, Share2, TrendingUp, TrendingDown, Minus, Play, Sparkles } from 'lucide-react';
+import ArticleEnhancer from './ArticleEnhancer';
 
 interface NewsCardProps {
   title: string;
@@ -35,6 +37,7 @@ const SentimentBadge = ({ sentiment }: { sentiment?: string; score?: number }) =
 
 const NewsCard = ({ title, summary, source, date, imageUrl, url, category, index, sentiment, sentimentScore }: NewsCardProps) => {
   const isVideo = title.toLowerCase().includes('video') || url.includes('youtube') || category === 'Video';
+  const [showEnhancer, setShowEnhancer] = useState(false);
 
   return (
     <motion.div
@@ -91,9 +94,18 @@ const NewsCard = ({ title, summary, source, date, imageUrl, url, category, index
         </p>
 
         <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
-          <button className="p-2 hover:bg-secondary rounded-full transition-colors text-muted-foreground hover:text-foreground">
-            <Share2 className="w-4 h-4" />
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => setShowEnhancer(true)}
+              className="p-2 hover:bg-primary/10 rounded-full transition-colors text-primary hover:text-primary/80 group/btn"
+              title="AI Enhance"
+            >
+              <Sparkles className="w-4 h-4" />
+            </button>
+            <button className="p-2 hover:bg-secondary rounded-full transition-colors text-muted-foreground hover:text-foreground">
+              <Share2 className="w-4 h-4" />
+            </button>
+          </div>
           <a
             href={url}
             target="_blank"
@@ -105,6 +117,13 @@ const NewsCard = ({ title, summary, source, date, imageUrl, url, category, index
           </a>
         </div>
       </div>
+
+      <ArticleEnhancer
+        isOpen={showEnhancer}
+        onClose={() => setShowEnhancer(false)}
+        articleUrl={url}
+        articleTitle={title}
+      />
     </motion.div>
   );
 };

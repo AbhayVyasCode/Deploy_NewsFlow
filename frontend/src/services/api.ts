@@ -7,9 +7,11 @@ import type {
   ChatMessage,
   ChatResponse,
   DigestResponse,
+  SummarizeResponse,
+  TranslateResponse,
 } from "./types";
 
-export type { NewsItem, SearchResponse, TrendsResponse, FeedResponse, ChatResponse, DigestResponse };
+export type { NewsItem, SearchResponse, TrendsResponse, FeedResponse, ChatResponse, DigestResponse, SummarizeResponse, TranslateResponse };
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
 
@@ -55,6 +57,22 @@ export const newsApi = {
 
   getRelated: async (query: string, limit: number = 5): Promise<{ related: NewsItem[]; query: string }> => {
     const response = await api.get(`/news/related/${encodeURIComponent(query)}`, { params: { limit } });
+    return response.data;
+  },
+
+  // Article Enhancement Features
+  summarizeArticle: async (url: string): Promise<SummarizeResponse> => {
+    const response = await api.post("/news/summarize", { url });
+    return response.data;
+  },
+
+  translateText: async (text: string, targetLanguage: string): Promise<TranslateResponse> => {
+    const response = await api.post("/news/translate", { text, target_language: targetLanguage });
+    return response.data;
+  },
+
+  speakText: async (text: string, language: string): Promise<Blob> => {
+    const response = await api.post("/news/speak", { text, language }, { responseType: 'blob' });
     return response.data;
   },
 };
