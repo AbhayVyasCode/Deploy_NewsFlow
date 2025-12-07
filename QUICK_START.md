@@ -5,6 +5,10 @@
 ### 1. Backend
 ```bash
 cd backend
+# Windows: use the batch file
+.\start_server.bat
+
+# Or use uvicorn directly
 uvicorn main:app --reload
 ```
 Backend runs on: `http://localhost:8000`

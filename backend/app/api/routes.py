@@ -11,6 +11,7 @@ from app.core.supabase import supabase
 from app.services.news_api import news_api_service
 from app.services.scraper import fetch_article_content
 from app.services.audio import text_to_speech
+from app.services.youtube_service import fetch_news_videos, fetch_trending_news_videos
 from typing import List, Optional
 from langchain_core.messages import HumanMessage, SystemMessage
 from fastapi.responses import StreamingResponse
@@ -329,6 +330,51 @@ async def get_sources(
         }
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============ VIDEO NEWS ENDPOINTS ============
+
+@router.get("/videos")
+async def get_video_news(query: str = "latest news", limit: int = 15):
+    """Get news videos from YouTube"""
+    try:
+        videos = await fetch_news_videos(max_results=limit)
+        return {
+            "success": True,
+            "videos": videos,
+            "total": len(videos),
+            "source": "youtube"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/videos/trending")
+async def get_trending_videos(limit: int = 15):
+    """Get trending news videos from YouTube"""
+    try:
+        videos = await fetch_trending_news_videos(limit)
+        return {
+            "success": True,
+            "videos": videos,
+            "total": len(videos),
+            "source": "youtube"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/videos/category/{category}")
+async def get_videos_by_category(category: str, limit: int = 15):
+    """Get news videos by category from YouTube"""
+    try:
+        videos = await fetch_news_videos([category], limit)
+        return {
+            "success": True,
+            "videos": videos,
+            "category": category,
+            "total": len(videos),
+            "source": "youtube"
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

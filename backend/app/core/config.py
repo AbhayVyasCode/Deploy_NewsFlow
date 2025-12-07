@@ -11,6 +11,9 @@ class Settings:
     # Google Gemini API
     GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
     
+    # YouTube API
+    YOUTUBE_API_KEY: str = os.getenv("YOUTUBE_API_KEY", "")
+    
     # Supabase
     SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
     SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")

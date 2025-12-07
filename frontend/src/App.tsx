@@ -8,7 +8,6 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Trends = lazy(() => import('./pages/Trends'));
 const SearchPage = lazy(() => import('./pages/Search'));
 const Settings = lazy(() => import('./pages/Settings'));
-const HindiNews = lazy(() => import('./pages/HindiNews'));
 const Videos = lazy(() => import('./pages/Videos'));
 const ArticleTools = lazy(() => import('./pages/ArticleTools'));
 
@@ -27,7 +26,6 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/trends" element={<Trends />} />
             <Route path="/videos" element={<Videos />} />
-            <Route path="/hindi" element={<HindiNews />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/tools" element={<ArticleTools />} />
             <Route path="/settings" element={<Settings />} />

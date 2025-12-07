@@ -14,9 +14,9 @@ const Videos = () => {
     setLoading(true);
     setError(null);
     try {
-      // Search for news with "video" keyword
-      const response = await newsApi.searchNews("news video trending");
-      setNews(response.news);
+      // Fetch news videos from YouTube
+      const response = await newsApi.getTrendingVideos(20);
+      setNews(response.videos);
     } catch (err) {
       console.error('Error fetching video news:', err);
       setError('Failed to fetch video news. Please try again later.');

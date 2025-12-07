@@ -75,6 +75,22 @@ export const newsApi = {
     const response = await api.post("/news/speak", { text, language }, { responseType: 'blob' });
     return response.data;
   },
+
+  // Video News
+  getVideoNews: async (query: string = "latest news", limit: number = 15): Promise<{ success: boolean; videos: NewsItem[]; total: number }> => {
+    const response = await api.get("/news/videos", { params: { query, limit } });
+    return response.data;
+  },
+
+  getTrendingVideos: async (limit: number = 15): Promise<{ success: boolean; videos: NewsItem[]; total: number }> => {
+    const response = await api.get("/news/videos/trending", { params: { limit } });
+    return response.data;
+  },
+
+  getVideosByCategory: async (category: string, limit: number = 15): Promise<{ success: boolean; videos: NewsItem[]; total: number }> => {
+    const response = await api.get(`/news/videos/category/${category}`, { params: { limit } });
+    return response.data;
+  },
 };
 
 export default newsApi;
