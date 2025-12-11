@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, Loader2, ExternalLink } from 'lucide-react';
+import { Bot, X, Send, Loader2, ExternalLink } from 'lucide-react';
 import { newsApi } from '../services/api';
 import type { ChatMessage } from '../services/types';
 
@@ -58,7 +58,20 @@ const ChatWidget = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
-        <MessageCircle className="w-6 h-6" />
+        <motion.div
+          animate={{ 
+            rotate: [0, -10, 10, -5, 5, 0],
+            scale: [1, 1.1, 1]
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            repeatDelay: 3,
+            ease: "easeInOut"
+          }}
+        >
+          <Bot className="w-8 h-8" />
+        </motion.div>
       </motion.button>
 
       {/* Chat Panel */}
@@ -73,7 +86,10 @@ const ChatWidget = () => {
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border bg-primary/5">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <div className="relative">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse absolute -top-1 -right-1" />
+                  <Bot className="w-6 h-6 text-primary" />
+                </div>
                 <span className="font-semibold">AI News Assistant</span>
               </div>
               <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-secondary rounded-lg">

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Newspaper, TrendingUp, Settings, Search, Video, Sparkles, Home, Sun, Moon } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useTheme } from '../context/ThemeContext';
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 
 const Navbar = () => {
   const location = useLocation();
@@ -64,7 +65,7 @@ const Navbar = () => {
               })}
             </div>
 
-            <div className="pl-4 border-l border-border hidden md:block">
+            <div className="pl-4 border-l border-border hidden md:flex items-center gap-4">
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-full hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
@@ -72,6 +73,17 @@ const Navbar = () => {
               >
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
+
+              <SignedIn>
+                <UserButton afterSignOutUrl="/" />
+              </SignedIn>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button className="px-4 py-2 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors">
+                    Sign In
+                  </button>
+                </SignInButton>
+              </SignedOut>
             </div>
           </div>
         </div>

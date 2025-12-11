@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import { Loader2 } from 'lucide-react';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Lazy load pages
 const Home = lazy(() => import('./pages/Home'));
@@ -25,12 +26,54 @@ function App() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/feed" element={<Feed />} />
-            <Route path="/trends" element={<Trends />} />
-            <Route path="/videos" element={<Videos />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/tools" element={<ArticleTools />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route
+              path="/feed"
+              element={
+                <ProtectedRoute>
+                  <Feed />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/trends"
+              element={
+                <ProtectedRoute>
+                  <Trends />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/videos"
+              element={
+                <ProtectedRoute>
+                  <Videos />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/search"
+              element={
+                <ProtectedRoute>
+                  <SearchPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tools"
+              element={
+                <ProtectedRoute>
+                  <ArticleTools />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </Suspense>
       </Layout>
