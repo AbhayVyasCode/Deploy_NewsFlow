@@ -1,59 +1,80 @@
 import { useRef, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Points, PointMaterial } from '@react-three/drei';
+import * as THREE from 'three';
+import { useTheme } from '../context/ThemeContext';
 
-const SimpleStars = (props: any) => {
-    const ref = useRef<any>(null);
+const StarField = (props: any) => {
+  const ref = useRef<any>();
+  const viewport = useThree((state) => state.viewport);
+  
+  const count = 3000;
+  const [positions] = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    const radius = 2; // Radius of the sphere
+    
+    for (let i = 0; i < count; i++) {
+        // Uniformly distributed points in a sphere
+        const u = Math.random();
+        const v = Math.random();
+        const theta = 2 * Math.PI * u;
+        const phi = Math.acos(2 * v - 1);
+        const r = Math.cbrt(Math.random()) * radius;
 
-    // Generate random points manually
-    const count = 2000;
-    const positions = useMemo(() => {
-        const positions = new Float32Array(count * 3);
-        for (let i = 0; i < count; i++) {
-            const r = 1.5 * Math.cbrt(Math.random());
-            const theta = Math.random() * 2 * Math.PI;
-            const phi = Math.acos(2 * Math.random() - 1);
+        const x = r * Math.sin(phi) * Math.cos(theta);
+        const y = r * Math.sin(phi) * Math.sin(theta);
+        const z = r * Math.cos(phi);
+        
+        pos[i * 3] = x;
+        pos[i * 3 + 1] = y;
+        pos[i * 3 + 2] = z;
+    }
+    return [pos];
+  }, []);
 
-            const x = r * Math.sin(phi) * Math.cos(theta);
-            const y = r * Math.sin(phi) * Math.sin(theta);
-            const z = r * Math.cos(phi);
+  useFrame((state) => {
+    if (ref.current) {
+        // Rotation
+        ref.current.rotation.x -= 0.001;
+        ref.current.rotation.y -= 0.0015;
 
-            positions[i * 3] = x;
-            positions[i * 3 + 1] = y;
-            positions[i * 3 + 2] = z;
-        }
-        return positions;
-    }, []);
+        // Simple subtle parallax based on mouse
+        ref.current.rotation.x += (state.pointer.y * 0.05 - ref.current.rotation.x) * 0.05;
+        ref.current.rotation.y += (state.pointer.x * 0.05 - ref.current.rotation.y) * 0.05;
+    }
+  });
 
-    useFrame((_state, delta) => {
-      if (ref.current) {
-        ref.current.rotation.x -= delta / 20;
-        ref.current.rotation.y -= delta / 30;
-      }
-    });
-
-    return (
-        <group rotation={[0, 0, Math.PI / 4]}>
-          <Points ref={ref} positions={positions} stride={3} frustumCulled={false} {...props}>
-            <PointMaterial
-              transparent
-              color="#aaaaaa"
-              size={0.003}
-              sizeAttenuation={true}
-              depthWrite={false}
-              opacity={0.6}
-            />
-          </Points>
-        </group>
-    );
+  return (
+    <group rotation={[0, 0, Math.PI / 4]}>
+      <Points ref={ref} positions={positions} stride={3} frustumCulled={false} {...props}>
+        <PointMaterial
+          transparent
+          color={props.color || "#6366f1"}
+          size={0.004}
+          sizeAttenuation={true}
+          depthWrite={false}
+          opacity={0.8}
+          blending={THREE.NormalBlending} // Changed from Additive for better visibility on light bg
+        />
+      </Points>
+    </group>
+  );
 };
 
-
 const ThreeBackground = () => {
+  const { theme } = useTheme();
+  
+  // Conditionally set colors based on theme
+  const particleColor = theme === 'dark' ? "#6366f1" : "#1e40af"; // Indigo-500 vs Blue-800
+  const bgClass = theme === 'dark' 
+    ? "bg-gradient-to-br from-[#0a0a0a] via-[#111] to-[#050505]" 
+    : "bg-gradient-to-br from-slate-50 via-white to-blue-50";
+
   return (
-    <div className="fixed inset-0 -z-10 bg-background transition-colors duration-300 pointer-events-none">
+    <div className={`fixed inset-0 z-0 pointer-events-none transition-colors duration-500 ${theme === 'dark' ? 'bg-black' : 'bg-white'}`}>
+        <div className={`absolute inset-0 opacity-90 transition-all duration-500 ${bgClass}`} />
       <Canvas camera={{ position: [0, 0, 1] }}>
-        <SimpleStars />
+        <StarField color={particleColor} />
       </Canvas>
     </div>
   );

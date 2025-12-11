@@ -17,11 +17,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const savedTheme = localStorage.getItem('newsflow_theme') as Theme;
       if (savedTheme) return savedTheme;
 
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
-      }
+      // Force default to dark as per request, ignoring system pref for first visit
+      return 'dark'; 
     }
-    return 'light'; // Default to light if no preference
+    return 'dark';
   });
 
   useEffect(() => {

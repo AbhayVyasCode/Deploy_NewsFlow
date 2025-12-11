@@ -4,7 +4,8 @@ import Layout from './components/Layout';
 import { Loader2 } from 'lucide-react';
 
 // Lazy load pages
-const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Home = lazy(() => import('./pages/Home'));
+const Feed = lazy(() => import('./pages/Feed'));
 const Trends = lazy(() => import('./pages/Trends'));
 const SearchPage = lazy(() => import('./pages/Search'));
 const Settings = lazy(() => import('./pages/Settings'));
@@ -23,7 +24,8 @@ function App() {
       <Layout>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/feed" element={<Feed />} />
             <Route path="/trends" element={<Trends />} />
             <Route path="/videos" element={<Videos />} />
             <Route path="/search" element={<SearchPage />} />

@@ -44,6 +44,17 @@
   --color-border: #334155;
   --color-input: #334155;
   --color-ring: #3b82f6;
+  --color-heading-special: #ef4444; /* Red-500 for visibility on dark */
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/10 backdrop-blur-xl;
+  }
+  
+  .text-special {
+    @apply text-foreground dark:text-[var(--color-heading-special)];
+  }
 }
 
 * {
@@ -54,4 +65,10 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans);
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/10 backdrop-blur-xl;
+  }
 }

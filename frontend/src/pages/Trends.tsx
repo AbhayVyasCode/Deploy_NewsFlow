@@ -38,7 +38,7 @@ const Trends = () => {
         <motion.h1 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="text-3xl md:text-4xl font-bold tracking-tight"
+          className="text-3xl md:text-4xl font-bold tracking-tight text-special"
         >
           Trending Now
         </motion.h1>

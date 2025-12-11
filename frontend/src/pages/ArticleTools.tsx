@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Languages, Volume2, Loader2, Copy, Check, Link as LinkIcon, Sparkles } from 'lucide-react';
 import newsApi from '../services/api';
 
@@ -85,237 +85,258 @@ const ArticleTools = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const TabButton = ({ id, label, icon: Icon }: { id: typeof activeTab, label: string, icon: any }) => (
+    <button
+      onClick={() => setActiveTab(id)}
+      className={`relative flex-1 flex items-center justify-center gap-2 px-6 py-4 font-medium transition-colors z-10 ${
+        activeTab === id ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+      }`}
+    >
+      <Icon className="w-4 h-4" />
+      {label}
+      {activeTab === id && (
+        <motion.div
+          layoutId="activeTab"
+          className="absolute inset-0 bg-primary/10 border-b-2 border-primary"
+          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+        />
+      )}
+    </button>
+  );
+
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen p-6 pt-24 pb-20">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto"
+        className="max-w-4xl mx-auto space-y-8"
       >
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-3 bg-primary/10 rounded-xl">
-              <Sparkles className="w-6 h-6 text-primary" />
-            </div>
-            <h1 className="text-4xl font-bold">AI Article Tools</h1>
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl mb-4">
+            <Sparkles className="w-8 h-8 text-primary" />
           </div>
-          <p className="text-muted-foreground">
-            Summarize, translate, and listen to any news article with AI-powered tools
+          <h1 className="text-4xl md:text-5xl font-bold text-special">AI Article Tools</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Transform how you consume news with our suite of AI-powered tools.
           </p>
         </div>
 
-        <div className="mb-6 p-6 bg-card rounded-xl border border-border shadow-sm">
-          <label className="block text-sm font-medium mb-2">Article URL</label>
-          <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+        <div className="glass-card rounded-2xl overflow-hidden shadow-2xl">
+           {/* URL Input Section */}
+          <div className="p-8 border-b border-white/10 dark:border-white/5 bg-background/90 backdrop-blur-md">
+            <label className="block text-sm font-semibold mb-3 text-foreground">Article URL</label>
+            <div className="relative group">
+              <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <input
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://example.com/article"
-                className="w-full pl-10 pr-4 py-3 bg-secondary/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Paste any article URL here (e.g., https://example.com/news-story)"
+                className="w-full pl-12 pr-4 py-4 rounded-xl bg-background border border-input shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-foreground placeholder:text-muted-foreground"
               />
             </div>
           </div>
-        </div>
 
-        <div className="flex border-b border-border bg-secondary/30 rounded-t-xl overflow-hidden">
-          <button
-            onClick={() => setActiveTab('summarize')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 font-medium transition-colors ${
-              activeTab === 'summarize'
-                ? 'bg-card text-primary border-b-2 border-primary'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            Summarize
-          </button>
-          <button
-            onClick={() => setActiveTab('translate')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 font-medium transition-colors ${
-              activeTab === 'translate'
-                ? 'bg-card text-primary border-b-2 border-primary'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Languages className="w-4 h-4" />
-            Translate
-          </button>
-          <button
-            onClick={() => setActiveTab('speak')}
-            className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 font-medium transition-colors ${
-              activeTab === 'speak'
-                ? 'bg-card text-primary border-b-2 border-primary'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Volume2 className="w-4 h-4" />
-            Speak
-          </button>
-        </div>
+          {/* Tabs */}
+          <div className="flex border-b border-white/10 dark:border-white/5 bg-secondary/80 backdrop-blur-sm">
+            <TabButton id="summarize" label="Summarize" icon={FileText} />
+            <TabButton id="translate" label="Translate" icon={Languages} />
+            <TabButton id="speak" label="Smart Reader" icon={Volume2} />
+          </div>
 
-        <div className="p-6 bg-card rounded-b-xl border border-t-0 border-border shadow-sm">
-          {error && (
-            <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-600 text-sm">
-              {error}
-            </div>
-          )}
-
-          {activeTab === 'summarize' && (
-            <div className="space-y-4">
-              <p className="text-muted-foreground text-sm">
-                Generate a concise summary of the article using AI. Enter the article URL above and click the button below.
-              </p>
-              <button
-                onClick={handleSummarize}
-                disabled={loading || !url}
-                className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Summarizing...
-                  </>
-                ) : (
-                  <>
-                    <FileText className="w-4 h-4" />
-                    Generate Summary
-                  </>
-                )}
-              </button>
-              {summary && (
-                <div className="mt-4 p-4 bg-secondary/50 rounded-lg border border-border">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-lg">{articleTitle}</h3>
-                    <button
-                      onClick={() => copyToClipboard(summary)}
-                      className="p-2 hover:bg-secondary rounded-lg transition-colors"
-                      title="Copy to clipboard"
-                    >
-                      {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
-                    </button>
+          {/* Content Area */}
+          <div className="p-8 bg-background/80 min-h-[400px] backdrop-blur-md">
+            <AnimatePresence mode="wait">
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-xl flex items-start gap-3 text-destructive"
+                >
+                  <div className="p-1 bg-destructive/20 rounded-full mt-0.5">
+                     <Sparkles className="w-4 h-4 rotate-180" />
                   </div>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{summary}</p>
-                </div>
+                  <p className="font-medium text-sm">{error}</p>
+                </motion.div>
               )}
-            </div>
-          )}
 
-          {activeTab === 'translate' && (
-            <div className="space-y-4">
-              <p className="text-muted-foreground text-sm">
-                Translate the article summary to Hindi or English.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setTargetLanguage('hi')}
-                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                    targetLanguage === 'hi'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-foreground hover:bg-secondary/80'
-                  }`}
+              {activeTab === 'summarize' && (
+                <motion.div
+                  key="summarize"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="space-y-6"
                 >
-                  Hindi
-                </button>
-                <button
-                  onClick={() => setTargetLanguage('en')}
-                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                    targetLanguage === 'en'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-foreground hover:bg-secondary/80'
-                  }`}
-                >
-                  English
-                </button>
-              </div>
-              <button
-                onClick={handleTranslate}
-                disabled={loading || (!summary && !translatedText)}
-                className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Translating...
-                  </>
-                ) : (
-                  <>
-                    <Languages className="w-4 h-4" />
-                    Translate to {targetLanguage === 'hi' ? 'Hindi' : 'English'}
-                  </>
-                )}
-              </button>
-              {translatedText && (
-                <div className="mt-4 p-4 bg-secondary/50 rounded-lg border border-border">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold">Translated Text</h3>
-                    <button
-                      onClick={() => copyToClipboard(translatedText)}
-                      className="p-2 hover:bg-secondary rounded-lg transition-colors"
-                    >
-                      {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
-                    </button>
+                  <div className="flex flex-col items-center justify-center gap-4 text-center py-8">
+                     <div className="p-4 rounded-full bg-blue-500/10 text-blue-500 mb-2">
+                        <FileText className="w-8 h-8" />
+                     </div>
+                     <h3 className="text-xl font-semibold text-foreground">Get the Gist Instantly</h3>
+                     <p className="text-muted-foreground max-w-md">
+                        Our AI analyzes the article and creates a concise, easy-to-read summary so you can stay informed in seconds.
+                     </p>
                   </div>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{translatedText}</p>
-                </div>
-              )}
-            </div>
-          )}
 
-          {activeTab === 'speak' && (
-            <div className="space-y-4">
-              <p className="text-muted-foreground text-sm">
-                Listen to the article content using text-to-speech.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setSpeakLanguage('en')}
-                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                    speakLanguage === 'en'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-foreground hover:bg-secondary/80'
-                  }`}
+                  <button
+                    onClick={handleSummarize}
+                    disabled={loading || !url}
+                    className="w-full bg-primary text-primary-foreground px-8 py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg shadow-primary/20"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Analyzing Content...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5" />
+                        Generate Summary
+                      </>
+                    )}
+                  </button>
+
+                  {summary && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-card border border-border rounded-2xl p-6 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
+                        <h3 className="font-bold text-lg text-foreground line-clamp-1 pr-4">{articleTitle}</h3>
+                        <button
+                          onClick={() => copyToClipboard(summary)}
+                          className="p-2 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+                          title="Copy to clipboard"
+                        >
+                          {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap text-lg">{summary}</p>
+                    </motion.div>
+                  )}
+                </motion.div>
+              )}
+
+              {activeTab === 'translate' && (
+                <motion.div
+                  key="translate"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="space-y-6"
                 >
-                  English
-                </button>
-                <button
-                  onClick={() => setSpeakLanguage('hi')}
-                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                    speakLanguage === 'hi'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-foreground hover:bg-secondary/80'
-                  }`}
+                  <div className="grid grid-cols-2 gap-4">
+                     <button
+                        onClick={() => setTargetLanguage('hi')}
+                        className={`p-4 rounded-xl border-2 transition-all font-semibold flex flex-col items-center gap-2 ${targetLanguage === 'hi' ? 'border-primary bg-primary/5 text-primary' : 'border-border bg-card hover:border-primary/50 text-muted-foreground'}`}
+                     >
+                        <span className="text-2xl">अ</span>
+                        Hindi
+                     </button>
+                     <button
+                         onClick={() => setTargetLanguage('en')}
+                         className={`p-4 rounded-xl border-2 transition-all font-semibold flex flex-col items-center gap-2 ${targetLanguage === 'en' ? 'border-primary bg-primary/5 text-primary' : 'border-border bg-card hover:border-primary/50 text-muted-foreground'}`}
+                     >
+                        <span className="text-2xl">A</span>
+                        English
+                     </button>
+                  </div>
+
+                  <button
+                    onClick={handleTranslate}
+                    disabled={loading || (!summary && !translatedText)}
+                    className="w-full bg-primary text-primary-foreground px-8 py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg shadow-primary/20"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Translating...
+                      </>
+                    ) : (
+                      <>
+                        <Languages className="w-5 h-5" />
+                        Translate Content
+                      </>
+                    )}
+                  </button>
+                  {translatedText && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-card border border-border rounded-2xl p-6 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-bold text-lg text-foreground">Translation Result</h3>
+                        <button
+                          onClick={() => copyToClipboard(translatedText)}
+                          className="p-2 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+                        >
+                          {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap text-lg">{translatedText}</p>
+                    </motion.div>
+                  )}
+                </motion.div>
+              )}
+
+              {activeTab === 'speak' && (
+                <motion.div
+                  key="speak"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="space-y-6"
                 >
-                  Hindi
-                </button>
-              </div>
-              <textarea
-                value={textToSpeak}
-                onChange={(e) => setTextToSpeak(e.target.value)}
-                placeholder="Enter text to speak or use summarized/translated text..."
-                className="w-full h-32 p-4 bg-secondary/50 border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <button
-                onClick={handleSpeak}
-                disabled={loading || isPlaying || (!textToSpeak && !translatedText && !summary)}
-                className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading || isPlaying ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    {isPlaying ? 'Playing...' : 'Generating...'}
-                  </>
-                ) : (
-                  <>
-                    <Volume2 className="w-4 h-4" />
-                    Speak Text
-                  </>
-                )}
-              </button>
-            </div>
-          )}
+                   <div className="flex justify-center gap-2 mb-4 bg-secondary/30 p-1 rounded-xl w-fit mx-auto">
+                        <button
+                        onClick={() => setSpeakLanguage('en')}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${speakLanguage === 'en' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                        English Voice
+                        </button>
+                        <button
+                        onClick={() => setSpeakLanguage('hi')}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${speakLanguage === 'hi' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                        Hindi Voice
+                        </button>
+                    </div>
+
+                  <textarea
+                    value={textToSpeak}
+                    onChange={(e) => setTextToSpeak(e.target.value)}
+                    placeholder="Enter text to speak, or generate a summary first..."
+                    className="w-full h-40 p-6 bg-card border border-input rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 text-lg leading-relaxed text-foreground placeholder:text-muted-foreground shadow-inner"
+                  />
+                  
+                  <button
+                    onClick={handleSpeak}
+                    disabled={loading || isPlaying || (!textToSpeak && !translatedText && !summary)}
+                    className={`w-full px-8 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 shadow-lg ${
+                        isPlaying 
+                        ? 'bg-destructive text-destructive-foreground shadow-destructive/20 hover:bg-destructive/90' 
+                        : 'bg-primary text-primary-foreground shadow-primary/20 hover:bg-primary/90'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    {loading || isPlaying ? (
+                      <>
+                         {isPlaying ? <Volume2 className="w-6 h-6 animate-pulse" /> : <Loader2 className="w-5 h-5 animate-spin" />}
+                        {isPlaying ? 'Playing Audio...' : 'Generating Audio...'}
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 className="w-5 h-5" />
+                        Read Aloud
+                      </>
+                    )}
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </motion.div>
     </div>

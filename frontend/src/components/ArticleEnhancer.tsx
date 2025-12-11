@@ -107,7 +107,7 @@ const ArticleEnhancer = ({ isOpen, onClose, articleUrl, articleTitle }: ArticleE
           <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6 border-b border-border">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h2 className="text-2xl font-bold mb-2">Article Enhancer</h2>
+                <h2 className="text-2xl font-bold mb-2 text-special">Article Enhancer</h2>
                 <p className="text-sm text-muted-foreground line-clamp-2">{articleTitle}</p>
               </div>
               <button
