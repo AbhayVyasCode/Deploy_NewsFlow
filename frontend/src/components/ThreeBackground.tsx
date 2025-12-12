@@ -1,12 +1,11 @@
 import { useRef, useMemo } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { Points, PointMaterial } from '@react-three/drei';
 import * as THREE from 'three';
 import { useTheme } from '../context/ThemeContext';
 
 const StarField = (props: any) => {
-  const ref = useRef<any>();
-  const viewport = useThree((state) => state.viewport);
+  const ref = useRef<any>(null);
   
   const count = 3000;
   const [positions] = useMemo(() => {
