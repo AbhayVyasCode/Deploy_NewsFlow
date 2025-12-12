@@ -12,8 +12,7 @@ def get_supabase() -> Client:
     
     try:
         client = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
-        print(f"✓ Supabase client initialized successfully", file=sys.stderr)
-        print(f"  Connected to: {settings.SUPABASE_URL}", file=sys.stderr)
+        print(f"✓ Supabase is connected", file=sys.stderr)
         return client
     except Exception as e:
         print(f"✗ Failed to initialize Supabase client: {e}", file=sys.stderr)

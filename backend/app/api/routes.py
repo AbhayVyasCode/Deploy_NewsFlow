@@ -12,6 +12,7 @@ from app.services.news_api import news_api_service
 from app.services.scraper import fetch_article_content
 from app.services.audio import text_to_speech
 from app.services.youtube_service import fetch_news_videos, fetch_trending_news_videos
+from app.core.filtering import filter_accessible_items, is_domain_accessible
 from typing import List, Optional
 from langchain_core.messages import HumanMessage, SystemMessage
 from fastapi.responses import StreamingResponse
@@ -35,7 +36,7 @@ async def search_news(request: NewsSearchRequest):
             "error": None
         }
         
-        result = news_agent.invoke(initial_state)
+        result = await news_agent.ainvoke(initial_state)
         
         if result.get("error"):
             print(f"Agent error: {result['error']}")
@@ -71,7 +72,7 @@ async def get_trends(category: str, limit: int = 25):
             "error": None
         }
         
-        result = news_agent.invoke(initial_state)
+        result = await news_agent.ainvoke(initial_state)
         news_items = [NewsItem(**item) for item in result.get("final_news", [])]
         
         return {
@@ -92,10 +93,20 @@ async def summarize_article(request: SummarizeRequest):
         # Fetch content
         result = await fetch_article_content(request.url)
         if not result or not result.get("content"):
-            raise HTTPException(status_code=400, detail="Could not fetch article content")
+            raise HTTPException(
+                status_code=400, 
+                detail="Access to this article is restricted by the publisher. Please try a different source for your summary. Thank you!"
+            )
 
         content = result["content"]
         title = result.get("title", "")
+        
+        # Ensure we have enough content to summarize
+        if len(content) < 100:
+             raise HTTPException(
+                status_code=400, 
+                detail="Extracted content is too short to summarize."
+            )
 
         llm = get_llm()
         if not llm:
@@ -103,18 +114,21 @@ async def summarize_article(request: SummarizeRequest):
 
         # Summarize using LLM
         prompt = f"""Summarize the following article text into a concise and engaging summary (max 300 words).
-
+        
         Article Title: {title}
         Article Text:
-        {content[:10000]}  # Limit content to avoid token limits
+        {content[:15000]}  # Increased limit for better context
         """
 
-        response = await llm.ainvoke([
-            SystemMessage(content="You are a helpful news summarizer."),
-            HumanMessage(content=prompt)
-        ])
-
-        summary = response.content
+        try:
+            response = await llm.ainvoke([
+                SystemMessage(content="You are a helpful news summarizer."),
+                HumanMessage(content=prompt)
+            ])
+            summary = response.content
+        except Exception as e:
+            print(f"LLM Summarization error: {e}")
+            raise HTTPException(status_code=500, detail="Failed to generate summary with AI.")
 
         return SummarizeResponse(
             summary=summary,
@@ -124,6 +138,7 @@ async def summarize_article(request: SummarizeRequest):
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Summarization error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/translate", response_model=TranslateResponse)
@@ -182,10 +197,13 @@ async def get_personalized_feed(categories: str = "", limit: int = 25):
         category_list = [c.strip() for c in categories.split(",") if c.strip()]
         
         if not category_list:
-            category_list = ["Technology", "Science", "Business"]
-        
-        news_agent = get_news_agent()
-        query = " OR ".join([f"{cat} news" for cat in category_list[:3]])
+            # If no categories specified (and no preferences), search broad "latest news"
+            # We explicitly set it to empty so news_agent knows to treat it as general/all
+            category_list = []
+            query = "latest news"
+        else:
+            news_agent = get_news_agent()
+            query = " OR ".join([f"{cat} news" for cat in category_list[:3]])
         
         initial_state = {
             "query": query,
@@ -197,14 +215,15 @@ async def get_personalized_feed(categories: str = "", limit: int = 25):
             "error": None
         }
         
-        result = news_agent.invoke(initial_state)
+        result = await news_agent.ainvoke(initial_state)
         news_items = [NewsItem(**item) for item in result.get("final_news", [])]
+        filtered_items = filter_accessible_items(news_items)
         
         return {
             "success": True,
-            "news": news_items[:limit],
+            "news": filtered_items[:limit],
             "categories": category_list,
-            "total": len(news_items)
+            "total": len(filtered_items)
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -259,7 +278,7 @@ async def get_related(query: str, limit: int = 5):
             "error": None
         }
         
-        result = news_agent.invoke(initial_state)
+        result = await news_agent.ainvoke(initial_state)
         news_items = [NewsItem(**item) for item in result.get("final_news", [])]
         
         return {
@@ -377,4 +396,6 @@ async def get_videos_by_category(category: str, limit: int = 15):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { Calendar, ExternalLink, Share2, TrendingUp, TrendingDown, Minus, Play, Sparkles } from 'lucide-react';
 import ArticleEnhancer from './ArticleEnhancer';
 
@@ -38,25 +38,34 @@ const SentimentBadge = ({ sentiment }: { sentiment?: string; score?: number }) =
 const NewsCard = ({ title, summary, source, date, imageUrl, url, category, index, sentiment, sentimentScore }: NewsCardProps) => {
   const isVideo = title.toLowerCase().includes('video') || url.includes('youtube') || category === 'Video';
   const [showEnhancer, setShowEnhancer] = useState(false);
-  const [rotation, setRotation] = useState({ x: 0, y: 0 });
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  // Smooth springs for rotation
+  const mouseX = useSpring(x, { stiffness: 300, damping: 30 });
+  const mouseY = useSpring(y, { stiffness: 300, damping: 30 });
+
+  const rotateX = useTransform(mouseY, [-0.5, 0.5], [5, -5]); // Invert tilt for X
+  const rotateY = useTransform(mouseX, [-0.5, 0.5], [-5, 5]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const card = e.currentTarget;
     const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
     
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
+    // Calculate normalized position (-0.5 to 0.5)
+    const width = rect.width;
+    const height = rect.height;
     
-    const rotateX = ((y - centerY) / centerY) * -5; // Max rotation deg
-    const rotateY = ((x - centerX) / centerX) * 5;
+    const mouseXVal = (e.clientX - rect.left) / width - 0.5;
+    const mouseYVal = (e.clientY - rect.top) / height - 0.5;
 
-    setRotation({ x: rotateX, y: rotateY });
+    x.set(mouseXVal);
+    y.set(mouseYVal);
   };
 
   const handleMouseLeave = () => {
-    setRotation({ x: 0, y: 0 });
+    x.set(0);
+    y.set(0);
   };
 
   return (
@@ -72,15 +81,12 @@ const NewsCard = ({ title, summary, source, date, imageUrl, url, category, index
       <motion.div
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        animate={{
-          rotateX: rotation.x,
-          rotateY: rotation.y,
-        }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        className="group relative h-full flex flex-col glass-card rounded-2xl overflow-hidden shadow-lg hover:shadow-primary/20 transition-all duration-300"
         style={{
-            transformStyle: 'preserve-3d',
+          rotateX,
+          rotateY,
+          transformStyle: 'preserve-3d',
         }}
+        className="group relative h-full flex flex-col glass-card rounded-2xl overflow-hidden shadow-lg hover:shadow-primary/20 transition-all duration-300"
       >
         <div className="relative h-52 overflow-hidden" style={{ transform: 'translateZ(20px)' }}>
             <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
@@ -137,6 +143,7 @@ const NewsCard = ({ title, summary, source, date, imageUrl, url, category, index
 
             <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
             <div className="flex gap-2">
+            {!isVideo && (
                 <motion.button 
                 whileHover={{ scale: 1.1, translateZ: 10 }}
                 whileTap={{ scale: 0.9 }}
@@ -146,6 +153,7 @@ const NewsCard = ({ title, summary, source, date, imageUrl, url, category, index
                 >
                 <Sparkles className="w-4 h-4" />
                 </motion.button>
+            )}
                 <motion.button 
                 whileHover={{ scale: 1.1, translateZ: 10 }}
                 whileTap={{ scale: 0.9 }}

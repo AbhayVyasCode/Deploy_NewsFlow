@@ -66,6 +66,7 @@ export const newsApi = {
     return response.data;
   },
 
+
   translateText: async (text: string, targetLanguage: string): Promise<TranslateResponse> => {
     const response = await api.post("/news/translate", { text, target_language: targetLanguage });
     return response.data;

@@ -6,7 +6,7 @@ import { newsApi } from '../services/api';
 import type { NewsItem } from '../services/types';
 import { Loader2 } from 'lucide-react';
 
-const CATEGORIES = ["All", "Technology", "Business", "Science", "Health", "Entertainment", "Sports"];
+const CATEGORIES = ["All", "General", "Technology", "Business", "Science", "Health", "Entertainment", "Sports"];
 
 const Trends = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");

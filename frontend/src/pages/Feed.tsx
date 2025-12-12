@@ -17,11 +17,26 @@ const Feed = () => {
     setLoading(true);
     setError(null);
     try {
+      let categories: string[] = [];
+      
+      const savedPrefs = localStorage.getItem("newsflow_preferences");
+      if (savedPrefs) {
+        try {
+          const parsed = JSON.parse(savedPrefs);
+          if (parsed.categories && Array.isArray(parsed.categories)) {
+            categories = parsed.categories;
+          }
+        } catch (e) {
+          console.error("Failed to parse preferences", e);
+        }
+      }
+
       if (query) {
         const response = await newsApi.searchNews(query);
         setNews(response.news);
       } else {
-        const response = await newsApi.getFeed(['Technology', 'Science', 'Business']);
+        // If categories is empty, backend will now handle it as "All" (or we pass explicit ["All"] if needed, but empty list is standard for "no filter")
+        const response = await newsApi.getFeed(categories.length > 0 ? categories : []); 
         setNews(response.news);
       }
     } catch (err) {

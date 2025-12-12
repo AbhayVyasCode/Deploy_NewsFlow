@@ -51,7 +51,7 @@ def detect_category_from_text(text: str, query: str = "", categories: List[str] 
     if not text:
         return "General"
     
-    text_lower = (text + " " + query).lower()
+    text_lower = text.lower()
     categories = categories or settings.NEWS_CATEGORIES
     
     # Category keyword mapping
@@ -78,10 +78,10 @@ def detect_category_from_text(text: str, query: str = "", categories: List[str] 
         "Law": ["law", "legal", "court", "judge", "lawyer", "lawsuit", "justice"],
     }
     
-    # Check for exact matches first
-    for category in categories:
-        if category.lower() in text_lower:
-            return category
+    # Check for exact matches first - REMOVED to avoid bias
+    # for category in categories:
+    #     if category.lower() in text_lower:
+    #         return category
     
     # Check keyword matches
     best_match = "General"
@@ -225,7 +225,24 @@ def create_news_agent():
         curated = state.get("curated_news", [])
         final_news = []
         
+        requested_categories = state.get("categories", [])
+        
         for i, item in enumerate(curated):
+            category = item.get("category", "General")
+            
+            # STRICT FILTERING LOGIC
+            # If specific categories are requested (and not "All" implied by empty list or explicit "All" check in router),
+            # strictly filter out items that don't match.
+            # Note: The router often passes ["Technology"] etc.
+            # If the user selected "All", the router typically passes [] or handles it.
+            # Here we check if `categories` is set in state.
+            
+            if requested_categories and "All" not in requested_categories:
+                 # If item category is NOT in requested categories, skip it
+                 # Case-insensitive comparison is safer
+                 if category not in requested_categories:
+                     continue
+
             final_news.append({
                 "id": f"news_{i}",
                 "title": item.get("title", "Untitled"),
@@ -233,7 +250,7 @@ def create_news_agent():
                 "source": item.get("source", "Unknown"),
                 "url": item.get("url", "#"),
                 "image_url": item.get("image_url"),
-                "category": item.get("category", "General"),
+                "category": category,
                 "published_at": item.get("published_at", state.get("date", "Today")),
                 "sentiment": item.get("sentiment", "neutral"),
                 "sentiment_score": item.get("sentiment_score", 0.0),

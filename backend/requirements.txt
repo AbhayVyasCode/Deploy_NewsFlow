@@ -14,3 +14,4 @@ gTTS==2.5.4
 beautifulsoup4==4.14.3
 requests==2.32.5
 google-api-python-client==2.149.0
+gunicorn==21.2.0
